@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MyShop Super Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:#f4f6f9;
+}
+
+/* NAVBAR */
+.navbar{
+    background:#0f172a;
+    color:white;
+    padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    font-size:22px;
+    font-weight:bold;
+    color:#38bdf8;
+    cursor:pointer;
+}
+
+.cart{
+    cursor:pointer;
+    position:relative;
+    font-weight:600;
+}
+
+.cart span{
+    background:#ef4444;
+    padding:4px 8px;
+    border-radius:50%;
+    font-size:12px;
+    position:absolute;
+    top:-8px;
+    right:-15px;
+}
+
+/* PAGE */
+.page{ display:none; padding:30px; }
+
+/* PRODUCT GRID */
+.container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:15px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    transition:0.3s;
+}
+
+.card:hover{ transform:translateY(-6px); }
+
+.card img{
+    width:100%;
+    height:200px;
+    object-fit:cover;
+    border-radius:12px;
+}
+
+.badge{
+    background:#ef4444;
+    color:white;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:12px;
+    display:inline-block;
+    margin-bottom:5px;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    margin-top:10px;
+}
+
+.primary{ background:#38bdf8; color:white; }
+.primary:hover{ background:#0ea5e9; }
+
+.success{ background:#22c55e; color:white; }
+.success:hover{ background:#16a34a; }
+
+.back{ background:#64748b; color:white; }
+
+/* BOX */
+.box{
+    max-width:600px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* FORM */
+input, select{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:10px;
+    border:1px solid #d1d5db;
+}
+
+/* SUCCESS */
+.success-icon{
+    font-size:70px;
+    color:#22c55e;
+}
+
+.loading{
+    display:none;
+    text-align:center;
+    color:#22c55e;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div class="logo" onclick="showHome()">MyShop</div>
+<div class="cart" onclick="showCart()">🛒 Cart <span id="cartCount">0</span></div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page">
+<h2>🔥 Super Deals</h2>
+<div class="container" id="productList"></div>
+</div>
+
+<!-- PRODUCT PAGE -->
+<div id="productPage" class="page">
+<div class="box">
+<button class="back" onclick="showHome()">⬅ Back</button>
+<img id="pImage" style="width:100%;border-radius:15px;">
+<h2 id="pName"></h2>
+<p id="pPrice"></p>
+<p id="pCategory"></p>
+<p>⭐ 4.5 Rating | 🚚 Free Delivery | 🛡 1 Year Warranty</p>
+
+<button class="primary" onclick="addToCart()">Add to Cart</button>
+<button class="success" onclick="buyNow()">Buy Now</button>
+</div>
+</div>
+
+<!-- CART -->
+<div id="cartPage" class="page">
+<div class="box">
+<button class="back" onclick="showHome()">⬅ Back</button>
+<h2>Your Cart</h2>
+<ul id="cartItems"></ul>
+<h3>Total: ₹<span id="cartTotal">0</span></h3>
+<button class="success" onclick="goToPayment()">Proceed to Payment</button>
+</div>
+</div>
+
+<!-- PAYMENT -->
+<div id="paymentPage" class="page">
+<div class="box">
+<button class="back" onclick="showCart()">⬅ Back</button>
+<h2>Secure Checkout</h2>
+
+<input type="text" id="customerName" placeholder="Full Name" required>
+<input type="email" id="customerEmail" placeholder="Email" required>
+<input type="text" id="customerAddress" placeholder="Delivery Address" required>
+
+<select id="paymentMethod" onchange="toggleOnline()" required>
+<option value="">Select Payment Method</option>
+<option value="COD">Cash on Delivery</option>
+<option value="Online">Online Payment</option>
+</select>
+
+<div id="onlineSection" style="display:none;">
+<select id="bank">
+<option value="">Select Bank</option>
+<option>SBI</option>
+<option>HDFC</option>
+<option>ICICI</option>
+<option>Axis</option>
+</select>
+
+<select id="paymentType" onchange="toggleCardUPI()">
+<option value="">Select Payment Type</option>
+<option value="Card">Card</option>
+<option value="UPI">UPI</option>
+</select>
+
+<div id="cardSection" style="display:none;">
+<input type="text" placeholder="Card Number">
+<input type="text" placeholder="Expiry Date">
+<input type="password" placeholder="CVV">
+</div>
+
+<div id="upiSection" style="display:none;">
+<input type="text" placeholder="UPI ID">
+</div>
+</div>
+
+<button class="success" onclick="processPayment()">Confirm & Pay</button>
+<div class="loading" id="loading">Processing Payment...</div>
+</div>
+</div>
+
+<!-- SUCCESS -->
+<div id="confirmPage" class="page">
+<div class="box" style="text-align:center;">
+<div class="success-icon">✔</div>
+<h2>Payment Successful 🎉</h2>
+<p id="paymentDetails"></p>
+<button class="success" onclick="showHome()">Continue Shopping</button>
+</div>
+</div>
+
+<script>const products=[
+{
+name:"Wireless Headphones",
+price:1500,
+category:"Electronics",
+image:"https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=500&q=80"
+},
+{
+name:"Smart Watch",
+price:2500,
+category:"Wearables",
+image:"https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=500&q=80"
+},
+{
+name:"Gaming Mouse",
+price:900,
+category:"Accessories",
+image:"https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=500&q=80"
+},
+{
+name:"Bluetooth Speaker",
+price:1200,
+category:"Electronics",
+image:"https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=500&q=80"
+}
+];
+
+let currentProduct={};
+let cart=[];
+
+function showHome(){hideAll();home.style.display="block";}
+function showCart(){hideAll();cartPage.style.display="block";}
+
+function renderProducts(){
+productList.innerHTML="";
+products.forEach(p=>{
+productList.innerHTML+=`
+<div class="card">
+<span class="badge">OFFER</span>
+<img src="${p.image}">
+<h3>${p.name}</h3>
+<p>₹${p.price}</p>
+<button class="primary"
+onclick="viewProduct('${p.name}',${p.price},'${p.category}','${p.image}')">
+View</button>
+</div>`;
+});
+}
+
+function viewProduct(name,price,category,image){
+currentProduct={name,price,category,image};
+pName.innerText=name;
+pPrice.innerText="Price: ₹"+price;
+pCategory.innerText="Category: "+category;
+pImage.src=image;
+hideAll();
+productPage.style.display="block";
+}
+
+function addToCart(){
+cart.push(currentProduct);
+updateCart();
+alert("Added to Cart");
+}
+
+function buyNow(){
+cart=[currentProduct];
+updateCart();
+goToPayment();
+}
+
+function updateCart(){
+cartCount.innerText=cart.length;
+cartItems.innerHTML="";
+let total=0;
+cart.forEach(item=>{
+cartItems.innerHTML+=`<li>${item.name} - ₹${item.price}</li>`;
+total+=item.price;
+});
+cartTotal.innerText=total;
+}
+
+function goToPayment(){
+if(cart.length==0){alert("Cart is empty");return;}
+hideAll();
+paymentPage.style.display="block";
+}
+
+function toggleOnline(){
+onlineSection.style.display=
+paymentMethod.value==="Online"?"block":"none";
+}
+
+function toggleCardUPI(){
+cardSection.style.display=
+paymentType.value==="Card"?"block":"none";
+upiSection.style.display=
+paymentType.value==="UPI"?"block":"none";
+}
+
+function processPayment(){
+
+if(!customerName.value || !customerEmail.value || !customerAddress.value){
+alert("Please fill all details!");
+return;
+}
+
+if(paymentMethod.value===""){
+alert("Select Payment Method");
+return;
+}
+
+loading.style.display="block";
+
+setTimeout(()=>{
+loading.style.display="none";
+
+let total=cart.reduce((sum,i)=>sum+i.price,0);
+let final=(total*1.18).toFixed(0);
+let txn="TXN"+Math.floor(Math.random()*1000000);
+
+paymentDetails.innerHTML=
+`Name: ${customerName.value}<br>
+Amount: ₹${final}<br>
+Transaction ID: ${txn}`;
+
+cart=[];
+updateCart();
+hideAll();
+confirmPage.style.display="block";
+
+},2000);
+}
+
+function hideAll(){
+home.style.display="none";
+productPage.style.display="none";
+cartPage.style.display="none";
+paymentPage.style.display="none";
+confirmPage.style.display="none";
+}
+
+renderProducts();
+showHome();
+</script>
+
+</body>
+</html>
